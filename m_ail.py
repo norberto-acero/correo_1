@@ -58,3 +58,52 @@ if unread_items.Count > 0:
         print("-" * 50)
 else:
     print("No hay correos no leídos en 'NACERO'.")
+
+
+#%% #! los correos por conversaciones--------------------------------------------------
+
+import win32com.client as client
+
+# Tu dirección (ajústala a tu correo real de Outlook)
+tu_direccion = "norberto.acero@ejemplo.com".lower()
+
+# Iniciar Outlook
+outlook = client.Dispatch('Outlook.Application')
+namespace = outlook.GetNamespace('MAPI')
+
+# Acceder a la Bandeja de entrada
+inbox = namespace.GetDefaultFolder(6)
+
+# Obtener todos los correos
+items = inbox.Items
+items.Sort("[ReceivedTime]", True)
+
+# Diccionario para agrupar por ConversationTopic
+conversaciones = {}
+
+# Filtrar correos donde no estás en el campo "To"
+for i in range(1, items.Count + 1):
+    try:
+        mail = items.Item(i)
+        if mail.Class != 43:  # MailItem
+            continue
+
+        if tu_direccion not in str(mail.To).lower():  # No estás en el campo 'To'
+            topic = mail.ConversationTopic
+            if topic not in conversaciones:
+                conversaciones[topic] = []
+            conversaciones[topic].append(mail)
+    except Exception as e:
+        continue
+
+# Mostrar resultados
+for topic, mails in conversaciones.items():
+    if len(mails) > 1:  # Más de un mensaje en el hilo
+        print(f"\n🧵 Conversación: {topic}")
+        for mail in mails:
+            print(f"  Asunto: {mail.Subject}")
+            print(f"  De: {mail.SenderName}")
+            print(f"  Para: {mail.To}")
+            print(f"  CC: {mail.CC}")
+            print(f"  Fecha: {mail.ReceivedTime}")
+            print("-" * 40)
