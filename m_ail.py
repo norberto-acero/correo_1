@@ -110,7 +110,7 @@ for topic, mails in conversaciones.items():
             print(f"  Fecha: {mail.ReceivedTime}")
             print("-" * 50)
 
-#%% #? todas las conversaciones con correos pendintes
+#%% #? todas las conversaciones con correos pendintes--------------------------------------------------
 import win32com.client as client
 
 # Tu dirección de correo (ajústala si es diferente)
