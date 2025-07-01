@@ -61,44 +61,46 @@ else:
 
 
 #%% #! los correos por conversaciones--------------------------------------------------
-
 import win32com.client as client
 
-# Tu dirección (ajústala a tu correo real de Outlook)
+# Dirección de correo del usuario (ajústala si es diferente)
 tu_direccion = "norberto.acero@ejemplo.com".lower()
 
 # Iniciar Outlook
 outlook = client.Dispatch('Outlook.Application')
 namespace = outlook.GetNamespace('MAPI')
 
-# Acceder a la Bandeja de entrada
-inbox = namespace.GetDefaultFolder(6)
+# Acceder a la bandeja de entrada y luego a la subcarpeta "NACERO"
+inbox = namespace.GetDefaultFolder(6)  # 6 = Inbox
+nacero_folder = inbox.Folders['NACERO']
 
-# Obtener todos los correos
-items = inbox.Items
+# Obtener los correos y ordenarlos por fecha
+items = nacero_folder.Items
 items.Sort("[ReceivedTime]", True)
 
-# Diccionario para agrupar por ConversationTopic
+# Diccionario para agrupar los correos por conversación
 conversaciones = {}
 
-# Filtrar correos donde no estás en el campo "To"
+# Recorrer los correos
 for i in range(1, items.Count + 1):
     try:
         mail = items.Item(i)
-        if mail.Class != 43:  # MailItem
+        if mail.Class != 43:  # Solo MailItems
             continue
 
-        if tu_direccion not in str(mail.To).lower():  # No estás en el campo 'To'
+        # Verificar que no estás en el campo 'To'
+        if tu_direccion not in str(mail.To).lower():
             topic = mail.ConversationTopic
             if topic not in conversaciones:
                 conversaciones[topic] = []
             conversaciones[topic].append(mail)
-    except Exception as e:
-        continue
 
-# Mostrar resultados
+    except Exception:
+        continue  # Ignora errores (p.ej., si hay ítems no de correo)
+
+# Mostrar conversaciones con más de un mensaje
 for topic, mails in conversaciones.items():
-    if len(mails) > 1:  # Más de un mensaje en el hilo
+    if len(mails) > 1:
         print(f"\n🧵 Conversación: {topic}")
         for mail in mails:
             print(f"  Asunto: {mail.Subject}")
@@ -106,4 +108,53 @@ for topic, mails in conversaciones.items():
             print(f"  Para: {mail.To}")
             print(f"  CC: {mail.CC}")
             print(f"  Fecha: {mail.ReceivedTime}")
-            print("-" * 40)
+            print("-" * 50)
+
+#%% #? todas las conversaciones con correos pendintes
+import win32com.client as client
+
+# Tu dirección de correo (ajústala si es diferente)
+tu_direccion = "norberto.acero@ejemplo.com".lower()
+
+# Iniciar Outlook
+outlook = client.Dispatch('Outlook.Application')
+namespace = outlook.GetNamespace('MAPI')
+
+# Acceder a la subcarpeta 'NACERO' dentro de la bandeja de entrada
+inbox = namespace.GetDefaultFolder(6)
+nacero = inbox.Folders['NACERO']
+
+# Obtener solo los correos no leídos
+unread_items = nacero.Items.Restrict("[Unread] = true")
+unread_items.Sort("[ReceivedTime]", True)
+
+# Agrupar por conversación, filtrando los que NO están dirigidos a ti
+conversaciones = {}
+
+for i in range(1, unread_items.Count + 1):
+    try:
+        mail = unread_items.Item(i)
+        if mail.Class != 43:  # Solo MailItem
+            continue
+
+        # Si tu correo NO está en el campo 'To'
+        if tu_direccion not in str(mail.To).lower():
+            topic = mail.ConversationTopic
+            if topic not in conversaciones:
+                conversaciones[topic] = []
+            conversaciones[topic].append(mail)
+
+    except Exception:
+        continue  # Ignora errores (ej. ítems corruptos)
+
+# Mostrar conversaciones con más de un mensaje
+for topic, mails in conversaciones.items():
+    if len(mails) > 1:
+        print(f"\n🧵 Conversación: {topic}")
+        for mail in mails:
+            print(f"  Asunto: {mail.Subject}")
+            print(f"  De: {mail.SenderName}")
+            print(f"  Para: {mail.To}")
+            print(f"  CC: {mail.CC}")
+            print(f"  Fecha: {mail.ReceivedTime}")
+            print("-" * 50)
