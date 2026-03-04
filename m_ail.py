@@ -45,7 +45,7 @@ unread_items = subfolder.Items.Restrict("[Unread] = true")
 unread_items.Sort("[ReceivedTime]", True)  # Orden descendente por fecha
 print(unread_items.Count)
 
-# Mostrar los correos no leídos
+#%% Mostrar los correos no leídos
 
 if unread_items.Count > 0:
     print(f"Hay {unread_items.Count} correos no leídos en 'NACERO':\n")
